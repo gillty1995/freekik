@@ -1,26 +1,42 @@
 "use client";
 
-import React, { JSX } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { trpc } from "./(providers)/providers";
-import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FormationPitch } from "@/components/formation-pitch";
-import { MatchClock } from "@/components/match/MatchClock";
-import { EventIcon } from "@/components/match/EventIcon";
 import { LoadingBall } from "@/components/match/LoadingBall";
 import { motion } from "framer-motion";
+import { StatsGrid } from "@/components/match/StatsGrid";
+import { FormationSection } from "@/components/match/FormationSection";
+import { PenaltyShootout } from "@/components/match/PenaltyShootout";
+import { EventsList } from "@/components/match/EventsList";
+import { MatchHeader } from "@/components/match/MatchHeader";
 
 export default function Home() {
   const [q, setQ] = useState("");
   const [debounced, setDebounced] = useState(q);
   const [selected, setSelected] = useState<number | null>(null);
+  const [recent, setRecent] = useState<string[]>([]);
+  const recentRef = useRef<string[]>([]);
 
   useEffect(() => {
     const id = setTimeout(() => setDebounced(q), 400);
     return () => clearTimeout(id);
   }, [q]);
+
+  useEffect(() => {
+    if (debounced.length > 1 && !recentRef.current.includes(debounced)) {
+      setRecent((prev) => {
+        const updated = [
+          debounced,
+          ...prev.filter((r) => r !== debounced),
+        ].slice(0, 3);
+        recentRef.current = updated;
+        return updated;
+      });
+    }
+  }, [debounced]);
 
   const search = trpc.match.search.useQuery(
     debounced.length > 1 ? { query: debounced } : undefined,
@@ -29,25 +45,75 @@ export default function Home() {
 
   const liveStatuses = ["1H", "2H", "HT", "ET", "P", "BT"];
 
+  type MatchDetails = {
+    id: number;
+    league: string;
+    kickoff: string;
+    status: string;
+    elapsed: number | null;
+    home: string;
+    away: string;
+    score: { home: number | null; away: number | null };
+    stats: Record<
+      string,
+      { home: string | number | null; away: string | number | null }
+    >;
+    lineups?: any[];
+    events: any[];
+    penalties?: {
+      order: any;
+      team: string;
+      player: string;
+      scored: boolean;
+    }[];
+  };
+
   const details = trpc.match.details.useQuery(
     { id: selected! },
     {
       enabled: selected !== null,
       refetchInterval: (query) => {
-        const d = query.state.data as any;
+        const d = query.state.data as MatchDetails;
         return d && d.status && liveStatuses.includes(d.status) ? 15000 : false;
       },
     }
-  );
+  ) as { data?: MatchDetails; isLoading: boolean };
 
-  const status = details.data?.status ?? null;
-  const apiElapsed = details.data?.elapsed ?? null;
+  const status = (details.data as MatchDetails)?.status ?? null;
+  const apiElapsed = (details.data as MatchDetails)?.elapsed ?? null;
   const matches = Array.isArray(search.data) ? search.data : [];
 
+  // Derived stats logic
   const derivedStats = (() => {
     if (!details.data) return null;
     const { events, stats, home, away } = details.data as any;
+    const statKeys = [
+      "possession",
+      "shotsOn",
+      "shotsOff",
+      "shotsBlocked",
+      "shotsTotal",
+      "saves",
+      "passAccuracy",
+      "passesTotal",
+      "passesAccurate",
+      "corners",
+      "offsides",
+      "fouls",
+      "yellow",
+      "red",
+      "shotsInsideBox",
+      "shotsOutsideBox",
+      "tackles",
+      "attacks",
+      "dangerousAttacks",
+      "throwIns",
+      "freeKicks",
+    ];
     const copy = { ...stats };
+    statKeys.forEach((key) => {
+      if (!copy[key]) copy[key] = { home: "-", away: "-" };
+    });
     function ensure(
       cardKey: "yellow" | "red",
       predicate: (d: string) => boolean
@@ -73,9 +139,25 @@ export default function Home() {
     return copy;
   })();
 
+  // Penalty shootout events derived from events array
+  const penaltyEvents = Array.isArray(details.data?.events)
+    ? details.data.events
+        .filter(
+          (ev) =>
+            ev.comments === "Penalty Shootout" &&
+            (ev.detail === "Penalty" || ev.detail === "Missed Penalty")
+        )
+        .map((ev, idx) => ({
+          team: ev.team,
+          player: ev.player,
+          scored: ev.detail === "Penalty",
+          order: idx + 1,
+        }))
+    : [];
+
   return (
     <div className="relative min-h-screen">
-      {/* Search bar at very top (hidden while a match modal is open) */}
+      {/* Search bar (hidden while a match modal is open) */}
       {!selected && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 w-full max-w-xl px-4 z-30 animate-fade-in">
           <div className="relative">
@@ -92,11 +174,42 @@ export default function Home() {
                   setQ("");
                   setDebounced("");
                 }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-xs px-2 py-1 rounded bg-neutral-800/70 text-white hover:bg-neutral-800 focus:outline-none"
+                className="absolute cursor-pointer right-3 top-1/2 -translate-y-1/2 text-xs px-2 py-1 rounded bg-neutral-800/70 text-white hover:bg-neutral-800 focus:outline-none"
                 aria-label="Clear search"
+                style={{ zIndex: 2 }}
               >
                 ×
               </button>
+            )}
+            {recent.length > 0 && !selected && (
+              <div className="absolute left-0 -bottom-7 w-full flex flex-wrap items-center justify-between px-1">
+                <div className="flex flex-wrap gap-2 text-xs items-center max-w-[60vw] sm:max-w-none">
+                  <span className="opacity-60 mr-2">Recently searched:</span>
+                  {recent.slice(0, 3).map((term) => (
+                    <button
+                      key={term}
+                      type="button"
+                      className="px-2 py-0.5 rounded cursor-pointer bg-neutral-200 dark:bg-neutral-800 hover:bg-primary/10 transition max-w-[80px] truncate"
+                      onClick={() => setQ(term)}
+                      style={{ maxWidth: "80px" }}
+                      title={term}
+                    >
+                      {term}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  className="px-2 py-0.5 rounded cursor-pointer bg-neutral-800/70 text-white hover:bg-neutral-800 transition text-xs ml-2"
+                  onClick={() => {
+                    setRecent([]);
+                    recentRef.current = [];
+                  }}
+                  aria-label="Clear recent searches"
+                >
+                  Clear
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -115,7 +228,7 @@ export default function Home() {
       <div className="pointer-events-none absolute inset-y-0 left-0 w-40 bg-gradient-to-r from-black/40 to-transparent" />
       <div className="pointer-events-none absolute inset-y-0 right-0 w-40 bg-gradient-to-l from-black/40 to-transparent" />
 
-      {/* Center hero text (independent of list) */}
+      {/* Center hero text */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-4">
         <motion.div
           initial="hidden"
@@ -164,7 +277,7 @@ export default function Home() {
         </motion.div>
       </div>
 
-      {/* Keyframe for gradient shimmer (kept) */}
+      {/* Keyframe for gradient shimmer */}
       <style jsx global>{`
         @keyframes shine {
           0% {
@@ -179,16 +292,14 @@ export default function Home() {
         }
       `}</style>
 
-      {/* Main content: results now directly under search bar (no huge vertical offset) */}
+      {/* Main content */}
       <main className="relative z-20 px-4 pt-28 pb-10 max-w-xl mx-auto space-y-4">
-        {/* Fullscreen centered loading overlay while searching */}
         {search.isLoading && <LoadingBall fullscreen label="Searching" />}
 
-        {/* Scrollable results list (prevents page height jump) */}
         <div
           className="results-scroll space-y-3 overflow-y-auto pr-1 pb-2"
           style={{
-            maxHeight: "calc(100vh - 11rem)", // viewport minus search bar + top padding
+            maxHeight: "calc(100vh - 11rem)",
           }}
         >
           {matches.map((m, i) => (
@@ -239,144 +350,52 @@ export default function Home() {
           >
             <div className="bg-white/90 dark:bg-neutral-900/90 m-auto max-w-3xl w-full rounded p-4 space-y-4 overflow-y-auto max-h-[90vh] backdrop-blur-md">
               <button
-                className="text-sm opacity-70 hover:opacity-100"
+                className="text-sm opacity-70 hover:opacity-100 cursor-pointer"
                 onClick={() => setSelected(null)}
               >
                 Close
               </button>
 
               <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <h2 className="font-semibold text-lg">
-                    {details.data.home} <span className="opacity-60">vs</span>{" "}
-                    {details.data.away}
-                  </h2>
-                  <div className="flex items-center gap-3 text-sm">
-                    <span className="px-2 py-0.5 rounded bg-emerald-600/10 text-emerald-600 border border-emerald-600/30 font-mono">
-                      {details.data.status}
-                    </span>
-                    <MatchClock
-                      status={status}
-                      elapsed={apiElapsed}
-                      className="font-mono text-emerald-600"
-                    />
-                  </div>
-                </div>
-                <p className="text-xs opacity-70">{details.data.league}</p>
+                <MatchHeader
+                  home={details.data.home}
+                  away={details.data.away}
+                  status={details.data.status}
+                  league={details.data.league}
+                  liveElapsed={apiElapsed}
+                />
                 <div className="text-3xl font-mono">
                   {details.data.score.home ?? "-"} :{" "}
                   {details.data.score.away ?? "-"}
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2">
-                  {/* Stats + Events */}
+                  {/* Stats and Events */}
                   <div className="space-y-6 order-1 md:order-1">
-                    {/* Stats grid */}
-                    <div className="grid grid-cols-3 gap-3 text-[11px]">
-                      {[
-                        ["Possession", "possession"],
-                        ["On Target", "shotsOn"],
-                        ["Total Shots", "shotsTotal"],
-                        ["Saves", "saves"],
-                        ["Total Passes", "passesTotal"],
-                        ["Corners", "corners"],
-                        ["Fouls", "fouls"],
-                        ["Yellow", "yellow"],
-                        ["Red", "red"],
-                      ].map(([label, key]) => {
-                        const stat = (derivedStats ??
-                          (details.data as any).stats)?.[key];
-                        if (!stat || (stat.home == null && stat.away == null))
-                          return null;
-                        return (
-                          <div
-                            key={key}
-                            className="p-2 rounded-md bg-neutral-100/80 dark:bg-neutral-800/70 border border-neutral-200/40 dark:border-neutral-700/50 backdrop-blur"
-                          >
-                            <p className="uppercase tracking-wide font-medium opacity-60">
-                              {label}
-                            </p>
-                            <p className="font-semibold">
-                              {stat.home ?? "-"} / {stat.away ?? "-"}
-                            </p>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Events list */}
-                    <div>
-                      <h3 className="font-medium text-sm mb-2 flex items-center gap-2">
-                        Events
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-neutral-200/50 dark:bg-neutral-700/50">
-                          {details.data.events.length}
-                        </span>
-                      </h3>
-                      <ul className="space-y-1 max-h-64 overflow-y-auto pr-1 text-xs">
-                        {details.data.events.map((ev, idx) => (
-                          <li
-                            key={`${idx}-${ev.team}-${ev.minute}-${ev.type}-${ev.detail}`}
-                            className="flex items-start gap-2 p-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                          >
-                            <span className="w-11 shrink-0 font-mono text-right">
-                              {ev.minute}
-                              {ev.extra ? `+${ev.extra}` : ""}'
-                            </span>
-                            <span className="w-5 flex justify-center">
-                              <EventIcon type={ev.type} detail={ev.detail} />
-                            </span>
-                            <span className="flex-1 leading-tight">
-                              <span className="font-semibold">{ev.team}</span>{" "}
-                              <span className="opacity-70">{ev.type}</span>{" "}
-                              <span>{ev.detail}</span>{" "}
-                              {ev.player && (
-                                <span className="font-medium">{ev.player}</span>
-                              )}
-                              {ev.assist && (
-                                <span className="opacity-60">
-                                  {" "}
-                                  ↔ {ev.assist}
-                                </span>
-                              )}
-                            </span>
-                          </li>
-                        ))}
-                        {details.data.events.length === 0 && (
-                          <li className="opacity-60">No events.</li>
-                        )}
-                      </ul>
-                    </div>
+                    <StatsGrid stats={derivedStats ?? {}} />
+                    <EventsList events={details.data.events as any} />
                   </div>
-
                   {/* Formations */}
-                  <div className="space-y-4 order-2 md:order-2">
-                    {(details.data.lineups || [])
-                      .slice(0, 2)
-                      .map((lu: any, i: number) => (
-                        <FormationPitch
-                          key={lu.team}
-                          team={lu.team}
-                          formation={lu.formation}
-                          players={
-                            lu.startXI?.map((p: any) => ({
-                              id: p.id,
-                              name: p.name,
-                              number: p.number,
-                              pos: p.pos,
-                            })) || []
-                          }
-                          side={i === 0 ? "away" : "home"}
-                        />
-                      ))}
+                  <div className="space-y-4 order-2 md:order-2 flex flex-col justify-end">
+                    <FormationSection lineups={details.data.lineups || []} />
                   </div>
                 </div>
+
+                {/* Conditionally show penalty shootout if present */}
+                {penaltyEvents.length > 0 && (
+                  <PenaltyShootout
+                    penalties={penaltyEvents}
+                    home={details.data.home}
+                    away={details.data.away}
+                  />
+                )}
               </div>
             </div>
           </div>
         )}
       </main>
 
-      {/* Fade-in animation keyframes remain */}
+      {/* Fade-in animation keyframes */}
       <style jsx global>{`
         @keyframes fade-in {
           from {
@@ -391,7 +410,6 @@ export default function Home() {
         .animate-fade-in {
           animation: fade-in 0.5s ease forwards;
         }
-        /* Optional nicer thin scrollbar for results list */
         .results-scroll::-webkit-scrollbar {
           width: 6px;
         }

@@ -14,30 +14,32 @@ export interface Lineup {
 }
 
 export function FormationSection({ lineups }: { lineups: Lineup[] }) {
-  if (!Array.isArray(lineups) || lineups.length === 0) {
-    return (
-      <div className="text-xs opacity-60 p-4 border rounded">
-        Lineups not available.
-      </div>
-    );
-  }
+  // Always render two FormationPitch components, fallback if missing
+  const hasLineups = Array.isArray(lineups) && lineups.length > 0;
+  const away = hasLineups ? lineups[0] : null;
+  const home = hasLineups && lineups.length > 1 ? lineups[1] : null;
 
   return (
     <div className="space-y-4">
-      {lineups.slice(0, 2).map((lu, i) => (
-        <FormationPitch
-          key={lu.team}
-          team={lu.team}
-          formation={lu.formation}
-          players={lu.startXI.map((p) => ({
-            id: p.id,
-            name: p.name,
-            number: p.number,
-            pos: p.pos,
-          }))}
-          side={i === 0 ? "away" : "home"}
-        />
-      ))}
+      <FormationPitch
+        team={away?.team ?? "Away"}
+        formation={away?.formation ?? ""}
+        players={away?.startXI ?? []}
+        side="away"
+        fallback={!away}
+      />
+      <FormationPitch
+        team={home?.team ?? "Home"}
+        formation={home?.formation ?? ""}
+        players={home?.startXI ?? []}
+        side="home"
+        fallback={!home}
+      />
+      {!hasLineups && (
+        <div className="text-xs opacity-60 p-4 border rounded text-center">
+          Lineups not available.
+        </div>
+      )}
     </div>
   );
 }

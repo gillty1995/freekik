@@ -12,7 +12,6 @@ export function LoadingBall({
   size = 120,
   fullscreen,
 }: LoadingBallProps) {
-  // Base size, then slightly smaller visual image (80%)
   const base = Math.max(40, size);
   const imgSize = Math.round(base * 0.8);
 

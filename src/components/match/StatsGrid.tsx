@@ -8,35 +8,34 @@ export interface MatchStats {
 
 const PRIMARY: [string, string][] = [
   ["Possession", "possession"],
-  ["On Target", "shotsOn"],
-  ["Shots Off", "shotsOff"],
-  ["Blocked", "shotsBlocked"],
-  ["Total Shots", "shotsTotal"],
-  ["Saves", "saves"],
-  ["Pass Acc", "passAccuracy"],
   ["Total Passes", "passesTotal"],
+  ["Total Shots", "shotsTotal"],
+  ["On Target", "shotsOn"],
+  ["Saves", "saves"],
   ["Corners", "corners"],
-  ["Offsides", "offsides"],
   ["Fouls", "fouls"],
   ["Yellow", "yellow"],
   ["Red", "red"],
+  ["Shots Off", "shotsOff"],
+  ["Offsides", "offsides"],
+  ["Shots Blocked", "shotsBlocked"],
 ];
 
 const MORE: [string, string][] = [
+  ["Shots Inside Box", "shotsInsideBox"],
+  ["Shots Outside Box", "shotsOutsideBox"],
+  ["Pass Acc %", "passAccuracy"],
   ["Acc Passes", "passesAccurate"],
-  ["In Box", "shotsInsideBox"],
-  ["Out Box", "shotsOutsideBox"],
   ["Tackles", "tackles"],
   ["Attacks", "attacks"],
-  ["Dangerous", "dangerousAttacks"],
+  ["Dangerous Attacks", "dangerousAttacks"],
   ["Throw Ins", "throwIns"],
   ["Free Kicks", "freeKicks"],
 ];
 
 export function StatsGrid({ stats }: { stats: MatchStats }) {
   const cell = (label: string, key: string) => {
-    const s = stats?.[key];
-    if (!s || (s.home == null && s.away == null)) return null;
+    const s = stats?.[key] ?? { home: "0", away: "0" };
     return (
       <div
         key={key}
@@ -46,7 +45,7 @@ export function StatsGrid({ stats }: { stats: MatchStats }) {
           {label}
         </p>
         <p className="font-semibold text-[12px]">
-          {s.home ?? "-"} / {s.away ?? "-"}
+          {s.home ?? "0"} / {s.away ?? "0"}
         </p>
       </div>
     );

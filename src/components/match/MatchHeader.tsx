@@ -6,7 +6,7 @@ interface Props {
   status: string;
   league: string;
   liveElapsed: number | null;
-  kickoff?: string; // optional ISO date
+  kickoff?: string;
 }
 
 export function MatchHeader({

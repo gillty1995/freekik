@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 interface Props {
   status: string | null;
-  elapsed: number | null; // minutes from API
+  elapsed: number | null;
   className?: string;
 }
 
@@ -17,7 +17,6 @@ export function MatchClock({ status, elapsed, className }: Props) {
   } | null>(null);
   const [now, setNow] = useState(Date.now());
 
-  // Seed / update base when API pushes new elapsed during active play
   useEffect(() => {
     if (status && elapsed != null && ACTIVE_STATUSES.has(status)) {
       setRef({ baseAt: Date.now(), baseElapsed: elapsed, status });

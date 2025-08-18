@@ -45,7 +45,7 @@ interface APIFootballStat {
 async function apiFetch<T>(path: string): Promise<T> {
   const key = process.env.APIFOOTBALL_KEY;
   const base = process.env.APIFOOTBALL_BASE || 'https://v3.football.api-sports.io';
-  const rapidHost = process.env.APIFOOTBALL_HOST; // undefined => native
+  const rapidHost = process.env.APIFOOTBALL_HOST; 
   if (!key) throw new Error('APIFOOTBALL_KEY not set');
 
   const url = `${base}${path.startsWith('/') ? path : `/${path}`}`;
@@ -75,7 +75,6 @@ async function apiFetch<T>(path: string): Promise<T> {
     throw new TRPCError({ code: 'BAD_REQUEST', message: `API ${res.status}: ${msg}` });
   }
 
-  // Logical / plan / subscription errors even with 200
   if (json?.message && !Array.isArray(json.response)) {
     throw new TRPCError({ code: 'BAD_REQUEST', message: `API logical: ${json.message}` });
   }
@@ -108,7 +107,6 @@ export const matchRouter = router({
       const dateStr = now.toISOString().slice(0,10);
       const windowMs = (windowHours ?? DEFAULT_WINDOW_HOURS) * 60 * 60 * 1000;
 
-      // Fetch today + live (native plan supports both)
       const [dayRaw, liveRaw] = await Promise.all([
         apiFetch<unknown>(`/fixtures?date=${dateStr}`),
         includeLive ? apiFetch<unknown>(`/fixtures?live=all`) : Promise.resolve([])
@@ -152,7 +150,6 @@ export const matchRouter = router({
         }));
       }
 
-      // Fallback: next fixture for team search
       try {
         const teams = await apiFetch<any>(`/teams?search=${encodeURIComponent(query)}`);
         if (Array.isArray(teams) && teams[0]?.team?.id) {

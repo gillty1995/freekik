@@ -30,7 +30,7 @@ export function EventsList({ events }: { events: MatchEvent[] }) {
         </span>
       </h3>
       <ul className="space-y-1 max-h-64 overflow-y-auto pr-1 text-xs">
-        {events.map((ev, idx) => (
+        {[...events].reverse().map((ev, idx) => (
           <li
             key={`${idx}-${ev.team}-${ev.minute}-${ev.type}`}
             className="flex items-start gap-2 p-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800"

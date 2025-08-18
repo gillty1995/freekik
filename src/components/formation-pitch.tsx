@@ -11,7 +11,8 @@ interface Props {
   formation: string;
   players: FormationPlayer[];
   team: string;
-  side: "home" | "away"; // away = top half, home = bottom half
+  side: "home" | "away";
+  fallback?: boolean; // <-- add fallback prop
 }
 
 /**
@@ -23,16 +24,31 @@ export const FormationPitch: React.FC<Props> = ({
   players,
   team,
   side,
+  fallback,
 }) => {
   const nums = formation
     .split(/[-–]/)
     .map((n) => parseInt(n.trim(), 10))
     .filter(Boolean);
 
-  if (!players.length) {
+  // Fallback: show pitch with "Lineup not available" message
+  if (fallback || !players.length) {
     return (
-      <div className="w-full aspect-[3/4] rounded-lg border border-dashed flex items-center justify-center text-xs opacity-60">
-        No lineup
+      <div
+        className="relative w-full aspect-[7/8] rounded-xl overflow-hidden ring-1 ring-emerald-400/20 shadow-md
+        bg-gradient-to-b from-emerald-900 via-emerald-800 to-emerald-900 flex items-center justify-center"
+      >
+        <span className="absolute inset-0 flex items-center justify-center text-xs opacity-70 pointer-events-none">
+          Lineup not available
+        </span>
+        {/* Team label */}
+        <div
+          className={`absolute ${
+            side === "away" ? "bottom-1" : "top-1"
+          } left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-black/35 backdrop-blur text-[10px] font-semibold tracking-wide uppercase`}
+        >
+          {team} {formation}
+        </div>
       </div>
     );
   }
@@ -55,7 +71,6 @@ export const FormationPitch: React.FC<Props> = ({
   const rowY = (i: number) =>
     side === "away" ? gkY + step * (i + 1) : gkY - step * (i + 1);
 
-  // Helper shorten name
   const short = (n: string) => {
     if (n.length <= 14) return n;
     const parts = n.split(" ");
