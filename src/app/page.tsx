@@ -250,7 +250,13 @@ export default function Home() {
                 scale: 1,
                 opacity: 1,
                 filter: "blur(0px)",
-                transition: { type: "spring", stiffness: 90, damping: 18 },
+                transition: {
+                  delay: 0.15,
+                  type: "spring",
+                  stiffness: 90,
+                  damping: 18,
+                  duration: 2.2,
+                },
               },
             }}
             className="font-extrabold text-7xl sm:text-8xl md:text-9xl tracking-tight
@@ -262,17 +268,30 @@ export default function Home() {
           </motion.h1>
           <motion.p
             variants={{
-              hidden: { y: 20, opacity: 0 },
+              hidden: { x: -20, opacity: 0 },
               show: {
-                y: 0,
+                x: 0,
                 opacity: 1,
-                transition: { duration: 0.8, ease: "easeOut" },
+                transition: { delay: 0.6, duration: 1.5, ease: "easeOut" },
               },
             }}
             className="mx-auto text-sm sm:text-lg md:text-2xl font-light text-white/85 leading-snug"
           >
             Live football intelligence: match clocks, events, lineups &
-            momentum. One clean pitch.
+            momentum.
+          </motion.p>
+          <motion.p
+            variants={{
+              hidden: { x: 20, opacity: 0 },
+              show: {
+                x: 0,
+                opacity: 1,
+                transition: { delay: 1, duration: 2.8, ease: "easeOut" },
+              },
+            }}
+            className="mt-[-10] text-sm sm:text-lg md:text-2xl font-light text-white/85 leading-snug"
+          >
+            One clean pitch.
           </motion.p>
         </motion.div>
       </div>
@@ -303,27 +322,34 @@ export default function Home() {
           }}
         >
           {matches.map((m, i) => (
-            <Card
+            <motion.div
               key={m.id}
-              className="hover:border-primary/50 transition cursor-pointer animate-fade-in z-50"
-              style={{ animationDelay: `${i * 40}ms` }}
-              onClick={() => setSelected(m.id)}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.4, delay: i * 0.05 }}
             >
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">
-                    {m.home} vs {m.away}
-                  </CardTitle>
-                  <Badge variant="secondary">{m.status}</Badge>
-                </div>
-                <p className="text-xs text-muted-foreground">{m.league}</p>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <p className="text-sm font-mono">
-                  {m.score.home ?? "-"} : {m.score.away ?? "-"}
-                </p>
-              </CardContent>
-            </Card>
+              <Card
+                className="hover:border-primary/50 transition cursor-pointer animate-fade-in z-50"
+                style={{ animationDelay: `${i * 40}ms` }}
+                onClick={() => setSelected(m.id)}
+              >
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">
+                      {m.home} vs {m.away}
+                    </CardTitle>
+                    <Badge variant="secondary">{m.status}</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{m.league}</p>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <p className="text-sm font-mono">
+                    {m.score.home ?? "-"} : {m.score.away ?? "-"}
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
 
           {!search.isLoading && matches.length === 0 && q.length > 1 && (
