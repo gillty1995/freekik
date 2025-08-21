@@ -15,9 +15,9 @@ export const metadata: Metadata = {
   description:
     "Live football match info, scores, stats, and more. Modern football app built with Next.js.",
   icons: {
-    icon: "/icons/favicon2.png",
-    shortcut: "/icons/favicon2.png",
-    apple: "/icons/favicon2.png",
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
   },
   openGraph: {
     title: "FreeKik",
