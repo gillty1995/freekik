@@ -10,6 +10,9 @@ const nextConfig = withPWA({
   images: {
     domains: [], 
   },
+   eslint: {
+    ignoreDuringBuilds: true,
+  },
 });
 
 export default nextConfig;

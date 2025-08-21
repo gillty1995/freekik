@@ -183,7 +183,7 @@ export default function Home() {
             )}
             {recent.length > 0 && !selected && (
               <div className="absolute left-0 -bottom-7 w-full flex flex-wrap items-center justify-between px-1">
-                <div className="flex flex-wrap gap-2 text-xs items-center max-w-[60vw] sm:max-w-none">
+                <div className="flex flex-wrap gap-2 text-xs items-center max-w-[80vw] sm:max-w-none">
                   <span className="opacity-60 mr-2">Recently searched:</span>
                   {recent.slice(0, 3).map((term) => (
                     <button
@@ -191,7 +191,14 @@ export default function Home() {
                       type="button"
                       className="px-2 py-0.5 rounded cursor-pointer bg-neutral-200 dark:bg-neutral-800 hover:bg-primary/10 transition max-w-[80px] truncate"
                       onClick={() => setQ(term)}
-                      style={{ maxWidth: "80px" }}
+                      style={{
+                        maxWidth: "40px",
+                        fontSize: "11px",
+                        padding: "2px 6px",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
                       title={term}
                     >
                       {term}
@@ -259,7 +266,7 @@ export default function Home() {
                 },
               },
             }}
-            className="font-extrabold text-7xl sm:text-8xl md:text-9xl tracking-tight
+            className="font-extrabold text-7xl max-sm:text-8xl md:text-9xl tracking-tight
               bg-[linear-gradient(110deg,#34d399,55%,#ffffff,75%,#34d399)]
               bg-[length:200%_100%] animate-[shine_6s_linear_infinite]
               bg-clip-text text-transparent drop-shadow-xl select-none"
@@ -275,7 +282,7 @@ export default function Home() {
                 transition: { delay: 0.6, duration: 1.5, ease: "easeOut" },
               },
             }}
-            className="mx-auto text-sm sm:text-lg md:text-2xl font-light text-white/85 leading-snug"
+            className="mx-auto text-lg max-sm:text-2xl md:text-2xl font-light text-white/85 leading-snug"
           >
             Live football intelligence: match clocks, events, lineups &
             momentum.
@@ -289,7 +296,7 @@ export default function Home() {
                 transition: { delay: 1, duration: 2.8, ease: "easeOut" },
               },
             }}
-            className="mt-[-10] text-sm sm:text-lg md:text-2xl font-light text-white/85 leading-snug"
+            className="mt-[-10] text-lg max-sm:text-2xl md:text-2xl font-light text-white/85 leading-snug"
           >
             One clean pitch.
           </motion.p>
