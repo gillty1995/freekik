@@ -12,6 +12,7 @@ import { FormationSection } from "@/components/match/FormationSection";
 import { PenaltyShootout } from "@/components/match/PenaltyShootout";
 import { EventsList } from "@/components/match/EventsList";
 import { MatchHeader } from "@/components/match/MatchHeader";
+import { Blurhash } from "react-blurhash";
 
 export default function Home() {
   const [q, setQ] = useState("");
@@ -222,6 +223,16 @@ export default function Home() {
         </div>
       )}
 
+      {/* BlurHash fallback image */}
+      <Blurhash
+        hash="L33]+fHq4T.TOGnhyFMwL}o$yFVq"
+        width={"100%"}
+        height={"100%"}
+        resolutionX={32}
+        resolutionY={32}
+        punch={1}
+        className="absolute inset-0 w-full h-full object-cover z-0"
+      />
       {/* Background video */}
       <video
         className="absolute inset-0 w-full h-full object-cover"
@@ -266,7 +277,7 @@ export default function Home() {
                 },
               },
             }}
-            className="font-extrabold text-7xl max-sm:text-8xl md:text-9xl tracking-tight
+            className="font-extrabold text-7xl max-sm:text-xl md:text-9xl tracking-tight
               bg-[linear-gradient(110deg,#34d399,55%,#ffffff,75%,#34d399)]
               bg-[length:200%_100%] animate-[shine_6s_linear_infinite]
               bg-clip-text text-transparent drop-shadow-xl select-none"
