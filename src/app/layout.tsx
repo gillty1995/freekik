@@ -12,7 +12,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "FreeKik",
-  description: "Live football match info, scores, stats, and more. Modern football app built with Next.js.",
+  description:
+    "Live football match info, scores, stats, and more. Modern football app built with Next.js.",
   icons: {
     icon: "/icons/favicon2.png",
     shortcut: "/icons/favicon2.png",
@@ -51,7 +52,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/icons/favicon2.png" />
+        <link rel="icon" href="/favicon.ico" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
