@@ -13,6 +13,8 @@ import { PenaltyShootout } from "@/components/match/PenaltyShootout";
 import { EventsList } from "@/components/match/EventsList";
 import { MatchHeader } from "@/components/match/MatchHeader";
 import { Blurhash } from "react-blurhash";
+import { Footer } from "@/components/ui/footer";
+import { normalizeSearchQuery } from "@/lib/searchAliases";
 
 export default function Home() {
   const [q, setQ] = useState("");
@@ -39,9 +41,12 @@ export default function Home() {
     }
   }, [debounced]);
 
+  // Normalize the debounced query before searching
+  const normalizedQuery = normalizeSearchQuery(debounced);
+
   const search = trpc.match.search.useQuery(
-    debounced.length > 1 ? { query: debounced } : undefined,
-    { enabled: debounced.length > 1 }
+    normalizedQuery.length > 1 ? { query: normalizedQuery } : undefined,
+    { enabled: normalizedQuery.length > 1 }
   );
 
   const liveStatuses = ["1H", "2H", "HT", "ET", "P", "BT"];
@@ -277,7 +282,7 @@ export default function Home() {
                 },
               },
             }}
-            className="font-extrabold text-7xl max-sm:text-xl md:text-9xl tracking-tight
+            className="font-extrabold text-7xl md:text-9xl tracking-tight
               bg-[linear-gradient(110deg,#34d399,55%,#ffffff,75%,#34d399)]
               bg-[length:200%_100%] animate-[shine_6s_linear_infinite]
               bg-clip-text text-transparent drop-shadow-xl select-none"
@@ -438,6 +443,7 @@ export default function Home() {
           </div>
         )}
       </main>
+      <Footer />
 
       {/* Fade-in animation keyframes */}
       <style jsx global>{`

@@ -12,7 +12,35 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "FreeKik",
-  description: "Live football match info",
+  description: "Live football match info, scores, stats, and more. Modern football app built with Next.js.",
+  icons: {
+    icon: "/icons/favicon2.png",
+    shortcut: "/icons/favicon2.png",
+    apple: "/icons/favicon2.png",
+  },
+  openGraph: {
+    title: "FreeKik",
+    description: "Live football match info, scores, stats, and more.",
+    url: "https://freekik.net",
+    siteName: "FreeKik",
+    images: [
+      {
+        url: "/icons/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "FreeKik Football App",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "FreeKik",
+    description: "Live football match info, scores, stats, and more.",
+    images: ["/icons/og-image.png"],
+  },
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
