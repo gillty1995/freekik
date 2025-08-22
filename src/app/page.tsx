@@ -162,7 +162,7 @@ export default function Home() {
     : [];
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen overflow-hidden">
       {/* Search bar (hidden while a match modal is open) */}
       {!selected && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 w-full max-w-xl px-4 z-30 animate-fade-in">
@@ -190,7 +190,9 @@ export default function Home() {
             {recent.length > 0 && !selected && (
               <div className="absolute left-0 -bottom-7 w-full flex flex-wrap items-center justify-between px-1">
                 <div className="flex flex-wrap gap-2 text-xs items-center max-w-[80vw] sm:max-w-none">
-                  <span className="opacity-60 mr-2">Recently searched:</span>
+                  <span className="text-muted-foreground mr-2">
+                    Recently searched:
+                  </span>
                   {recent.slice(0, 3).map((term) => (
                     <button
                       key={term}
@@ -213,7 +215,7 @@ export default function Home() {
                 </div>
                 <button
                   type="button"
-                  className="px-2 py-0.5 rounded cursor-pointer bg-neutral-800/70 text-white hover:bg-neutral-800 transition text-xs ml-2"
+                  className="px-2 py-0.5 rounded border bg-neutral-100 dark:bg-neutral-800 border-neutral-300 dark:border-neutral-700 text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-primary/10 transition text-xs ml-2"
                   onClick={() => {
                     setRecent([]);
                     recentRef.current = [];
@@ -229,7 +231,7 @@ export default function Home() {
       )}
 
       {/* BlurHash fallback image */}
-      <div className="absolute inset-0 w-full h-full aspect-video">
+      <div className="absolute inset-0 w-full h-full">
         <Blurhash
           hash="L33]+fHq4T.TOGnhyFMwL}o$yFVq"
           width="100%"
@@ -237,12 +239,13 @@ export default function Home() {
           resolutionX={64}
           resolutionY={64}
           punch={1}
-          className="w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover"
         />
       </div>
       {/* Background video */}
       <video
         className="absolute inset-0 w-full h-full object-cover"
+        style={{ minHeight: "100vh" }}
         src="/videos/soccer.mov"
         autoPlay
         loop
@@ -378,7 +381,9 @@ export default function Home() {
           ))}
 
           {!search.isLoading && matches.length === 0 && q.length > 1 && (
-            <p className="text-xs opacity-60 px-1">No matches found.</p>
+            <p className="text-xs px-2 py-0.5 rounded border bg-neutral-100 dark:bg-neutral-800 border-neutral-300 dark:border-neutral-700 text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-primary/10 transition inline-block">
+              No matches found.
+            </p>
           )}
         </div>
 

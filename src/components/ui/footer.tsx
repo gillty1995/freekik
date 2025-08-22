@@ -11,7 +11,7 @@ export function Footer() {
         href="https://gillhermelin.com/"
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center gap-1 text-muted-foreground hover:text-primary transition"
+        className="flex items-center text-muted-foreground hover:text-primary transition"
         aria-label="Gill Hermelin Portfolio"
       >
         <ExternalLink size={16} />
