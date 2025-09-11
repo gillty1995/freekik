@@ -3,7 +3,7 @@ import { ExternalLink } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="w-full px-4 py-3 flex items-center justify-between text-xs bg-transparent fixed bottom-0 left-0 z-40">
+    <footer className="w-full px-5 py-4 flex items-center justify-between text-xs bg-transparent fixed bottom-0 left-0 z-40">
       <span className="text-muted-foreground">
         &copy; {new Date().getFullYear()} freekik
       </span>

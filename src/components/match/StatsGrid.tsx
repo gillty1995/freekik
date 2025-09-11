@@ -55,7 +55,7 @@ export function StatsGrid({ stats }: { stats: MatchStats }) {
       <div className="grid grid-cols-3 gap-3 text-[11px]">
         {PRIMARY.map(([l, k]) => cell(l, k))}
       </div>
-      <details className="text-[11px]">
+      <details className="text-[11px] max-md:text-[13px]">
         <summary className="cursor-pointer select-none opacity-80 hover:opacity-100">
           More stats
         </summary>

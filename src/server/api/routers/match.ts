@@ -131,6 +131,10 @@ export const matchRouter = router({
         const withinWindow = skipWindow
           ? true
           : (kick >= (now.getTime() - LIVE_LOOKBACK_MS) && kick <= untilTs);
+
+           if (query === "__SHOW_ALL_LIVE__") {
+              return isLive;
+        }
         const nameMatch =
           f.league.name.toLowerCase().includes(q) ||
           f.teams.home.name.toLowerCase().includes(q) ||

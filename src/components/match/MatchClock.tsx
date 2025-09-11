@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { Timer } from "lucide-react";
 
 interface Props {
   status: string | null;
@@ -30,6 +31,10 @@ export function MatchClock({ status, elapsed, className }: Props) {
     if (!ref) return;
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
+  }, [ref]);
+
+  useEffect(() => {
+    if (ref) setNow(Date.now());
   }, [ref]);
 
   function format(): string | null {
@@ -70,8 +75,18 @@ export function MatchClock({ status, elapsed, className }: Props) {
   const display = format();
   if (!display) return null;
   return (
-    <span className={className ?? "font-mono text-emerald-600"}>
-      ⏱ {display}
+    <span
+      className={
+        className ?? "font-mono text-emerald-600 flex items-center gap-1"
+      }
+    >
+      {/* Mobile: Lucide Timer */}
+      <span className="inline md:hidden mr-2">
+        <Timer size={16} className="inline" />
+      </span>
+      {/* Desktop: Unicode emoji */}
+      <span className="hidden md:inline mr-2">⏱</span>
+      {display}
     </span>
   );
 }

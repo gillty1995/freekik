@@ -15,6 +15,7 @@ import { MatchHeader } from "@/components/match/MatchHeader";
 import { Blurhash } from "react-blurhash";
 import { Footer } from "@/components/ui/footer";
 import { normalizeSearchQuery } from "@/lib/searchAliases";
+import { FormationPlayer } from "@/components/formation-pitch";
 
 export default function Home() {
   const [q, setQ] = useState("");
@@ -160,6 +161,39 @@ export default function Home() {
           order: idx + 1,
         }))
     : [];
+
+  // Build substitutions array from events
+  const buildSubs = (events: any[], lineups: any[]) => {
+    if (!Array.isArray(events) || !Array.isArray(lineups)) return [];
+    // Flatten all startXI players for both teams
+    const allPlayers = lineups.flatMap((l) => l.startXI ?? []);
+    return events
+      .filter((ev) => ev.type === "subst" && ev.player && ev.assist)
+      .map((ev) => {
+        // Find the player coming OFF (assist)
+        const outPlayer = allPlayers.find((p) => p.name === ev.assist);
+        // Find the player coming ON (player)
+        let inPlayer = allPlayers.find((p) => p.name === ev.player);
+        // If not found, create a minimal FormationPlayer object
+        if (!inPlayer) {
+          inPlayer = {
+            id: Math.random(), // fallback ID
+            name: ev.player,
+            number: null,
+            pos: "",
+          };
+        }
+        return outPlayer ? { outId: outPlayer.id, in: inPlayer } : null;
+      })
+      .filter(Boolean);
+  };
+
+  const subs =
+    details.data && details.data.events && details.data.lineups
+      ? buildSubs(details.data.events, details.data.lineups).filter(
+          (sub): sub is { outId: number; in: FormationPlayer } => sub !== null
+        )
+      : [];
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -433,7 +467,10 @@ export default function Home() {
                   </div>
                   {/* Formations */}
                   <div className="space-y-4 order-2 md:order-2 flex flex-col justify-end">
-                    <FormationSection lineups={details.data.lineups || []} />
+                    <FormationSection
+                      lineups={details.data.lineups || []}
+                      substitutions={subs}
+                    />
                   </div>
                 </div>
 

@@ -8,5 +8,9 @@ export function normalizeSearchQuery(query: string): string {
     "st louis": "louis city",
   };
 
+  if (q === "live") {
+    return "__SHOW_ALL_LIVE__"; 
+  }
+
   return aliasMap[q] || q;
 }

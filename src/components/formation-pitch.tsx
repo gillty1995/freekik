@@ -12,8 +12,18 @@ interface Props {
   players: FormationPlayer[];
   team: string;
   side: "home" | "away";
-  fallback?: boolean; // <-- add fallback prop
+  fallback?: boolean;
+  substitutions?: { outId: number; in: FormationPlayer }[];
 }
+
+// Helper to get substituted player
+const getPlayer = (
+  p: FormationPlayer,
+  substitutions?: { outId: number; in: FormationPlayer }[]
+): FormationPlayer & { substituted?: boolean } => {
+  const sub = substitutions?.find((s) => s.outId === p.id);
+  return sub ? { ...sub.in, substituted: true } : { ...p };
+};
 
 /**
  * Half-pitch view per team (they face each other).
@@ -25,6 +35,7 @@ export const FormationPitch: React.FC<Props> = ({
   team,
   side,
   fallback,
+  substitutions,
 }) => {
   const nums = formation
     .split(/[-–]/)
@@ -147,9 +158,18 @@ export const FormationPitch: React.FC<Props> = ({
             }}
             className="flex gap-2"
           >
-            {row.map((p) => (
-              <PlayerBadge key={p.id} player={p} side={side} short={short} />
-            ))}
+            {row.map((p) => {
+              const player = getPlayer(p, substitutions);
+              return (
+                <PlayerBadge
+                  key={player.id}
+                  player={player}
+                  side={side}
+                  short={short}
+                  substituted={!!player.substituted}
+                />
+              );
+            })}
           </div>
         );
       })}
@@ -169,19 +189,28 @@ export const FormationPitch: React.FC<Props> = ({
 };
 
 interface BadgeProps {
-  player: FormationPlayer;
+  player: FormationPlayer & { substituted?: boolean };
   gk?: boolean;
   style?: React.CSSProperties;
   side: "home" | "away";
   short: (n: string) => string;
+  substituted?: boolean;
 }
 
-const PlayerBadge: React.FC<BadgeProps> = ({ player, gk, style, short }) => (
+const PlayerBadge: React.FC<BadgeProps> = ({
+  player,
+  gk,
+  style,
+  short,
+  substituted,
+}) => (
   <div style={style} className="group flex flex-col items-center">
     <div
       className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-semibold ring-2 ring-white/40 shadow-md transition
       ${
-        gk
+        substituted
+          ? "bg-blue-500 text-white"
+          : gk
           ? "bg-amber-400 text-black"
           : "bg-emerald-600/90 group-hover:bg-emerald-500"
       }`}

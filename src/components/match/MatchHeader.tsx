@@ -1,5 +1,9 @@
 "use client";
 
+import { MatchClock } from "./MatchClock";
+
+const ACTIVE_STATUSES = new Set(["1H", "2H", "ET", "1ET", "2ET", "P"]);
+
 interface Props {
   home: string;
   away: string;
@@ -27,8 +31,9 @@ export function MatchHeader({
           <span className="px-2 py-0.5 rounded bg-emerald-600/10 text-emerald-600 border border-emerald-600/30 font-mono">
             {status}
           </span>
-          {liveElapsed != null && (
-            <span className="font-mono text-emerald-600">⏱ {liveElapsed}'</span>
+          {/* Only show MatchClock for active statuses */}
+          {liveElapsed != null && ACTIVE_STATUSES.has(status) && (
+            <MatchClock status={status} elapsed={liveElapsed} />
           )}
         </div>
       </div>
