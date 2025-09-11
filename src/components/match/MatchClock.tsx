@@ -86,7 +86,7 @@ export function MatchClock({ status, elapsed, className }: Props) {
       </span>
       {/* Desktop: Unicode emoji */}
       <span className="hidden md:inline mr-2">⏱</span>
-      {display}
+      <span className="max-md:mt-1">{display}</span>
     </span>
   );
 }

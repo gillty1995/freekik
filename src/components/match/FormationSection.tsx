@@ -51,6 +51,11 @@ export function FormationSection({
           />
         </div>
       </details>
+      {!hasLineups && (
+        <div className="text-xs opacity-60 p-4 border rounded text-center">
+          Lineups not available.
+        </div>
+      )}
 
       {/* Desktop: show always expanded */}
       <div className="hidden md:block text-[11px]">
