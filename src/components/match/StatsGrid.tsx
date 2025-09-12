@@ -52,12 +52,20 @@ export function StatsGrid({ stats }: { stats: MatchStats }) {
   };
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-3 text-[11px]">
+      {/* <div className="grid grid-cols-3 gap-3 text-[11px]">
         {PRIMARY.map(([l, k]) => cell(l, k))}
-      </div>
+      </div> */}
+      <details open className="text-[11px] max-md:text-[13px]">
+        <summary className="cursor-pointer select-none opacity-80 hover:opacity-100">
+          Primary Stats
+        </summary>
+        <div className="mt-2 grid grid-cols-3 gap-3">
+          {PRIMARY.map(([l, k]) => cell(l, k))}
+        </div>
+      </details>
       <details className="text-[11px] max-md:text-[13px]">
         <summary className="cursor-pointer select-none opacity-80 hover:opacity-100">
-          More stats
+          More Stats
         </summary>
         <div className="mt-2 grid grid-cols-3 gap-3">
           {MORE.map(([l, k]) => cell(l, k))}

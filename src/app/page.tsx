@@ -9,7 +9,10 @@ import { LoadingBall } from "@/components/match/LoadingBall";
 import { motion } from "framer-motion";
 import { StatsGrid } from "@/components/match/StatsGrid";
 import { FormationSection } from "@/components/match/FormationSection";
-import { PenaltyShootout } from "@/components/match/PenaltyShootout";
+import {
+  PenaltyEvent,
+  PenaltyShootout,
+} from "@/components/match/PenaltyShootout";
 import { EventsList } from "@/components/match/EventsList";
 import { MatchHeader } from "@/components/match/MatchHeader";
 import { Blurhash } from "react-blurhash";
@@ -42,7 +45,6 @@ export default function Home() {
     }
   }, [debounced]);
 
-  // Normalize the debounced query before searching
   const normalizedQuery = normalizeSearchQuery(debounced);
 
   const search = trpc.match.search.useQuery(
@@ -146,7 +148,7 @@ export default function Home() {
     return copy;
   })();
 
-  // Penalty shootout events derived from events array
+  // Penalty shootout
   const penaltyEvents = Array.isArray(details.data?.events)
     ? details.data.events
         .filter(
@@ -162,22 +164,36 @@ export default function Home() {
         }))
     : [];
 
-  // Build substitutions array from events
+  const [cachedPenalties, setCachedPenalties] = useState<PenaltyEvent[]>([]);
+
+  useEffect(() => {
+    if (
+      penaltyEvents.length > 0 &&
+      (penaltyEvents.length !== cachedPenalties.length ||
+        !penaltyEvents.every(
+          (ev, i) =>
+            ev.team === cachedPenalties[i]?.team &&
+            ev.player === cachedPenalties[i]?.player &&
+            ev.scored === cachedPenalties[i]?.scored
+        ))
+    ) {
+      setCachedPenalties(penaltyEvents);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [penaltyEvents]);
+
+  // Build substitutions
   const buildSubs = (events: any[], lineups: any[]) => {
     if (!Array.isArray(events) || !Array.isArray(lineups)) return [];
-    // Flatten all startXI players for both teams
     const allPlayers = lineups.flatMap((l) => l.startXI ?? []);
     return events
       .filter((ev) => ev.type === "subst" && ev.player && ev.assist)
       .map((ev) => {
-        // Find the player coming OFF (assist)
         const outPlayer = allPlayers.find((p) => p.name === ev.assist);
-        // Find the player coming ON (player)
         let inPlayer = allPlayers.find((p) => p.name === ev.player);
-        // If not found, create a minimal FormationPlayer object
         if (!inPlayer) {
           inPlayer = {
-            id: Math.random(), // fallback ID
+            id: Math.random(), // fallback
             name: ev.player,
             number: null,
             pos: "",
@@ -197,7 +213,7 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      {/* Search bar (hidden while a match modal is open) */}
+      {/* Search bar */}
       {!selected && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 w-full max-w-xl px-4 z-30 animate-fade-in">
           <div className="relative">
@@ -459,6 +475,15 @@ export default function Home() {
                   {details.data.score.away ?? "-"}
                 </div>
 
+                {/* Conditionally show penalty shootout if present */}
+                {penaltyEvents.length > 0 && (
+                  <PenaltyShootout
+                    penalties={cachedPenalties}
+                    home={details.data.home}
+                    away={details.data.away}
+                  />
+                )}
+
                 <div className="grid gap-6 md:grid-cols-2">
                   {/* Stats and Events */}
                   <div className="space-y-6 order-1 md:order-1">
@@ -473,15 +498,6 @@ export default function Home() {
                     />
                   </div>
                 </div>
-
-                {/* Conditionally show penalty shootout if present */}
-                {penaltyEvents.length > 0 && (
-                  <PenaltyShootout
-                    penalties={penaltyEvents}
-                    home={details.data.home}
-                    away={details.data.away}
-                  />
-                )}
               </div>
             </div>
           </div>
