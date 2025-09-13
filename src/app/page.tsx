@@ -18,7 +18,8 @@ import { MatchHeader } from "@/components/match/MatchHeader";
 import { Blurhash } from "react-blurhash";
 import { Footer } from "@/components/ui/footer";
 import { normalizeSearchQuery } from "@/lib/searchAliases";
-import { FormationPlayer } from "@/components/formation-pitch";
+import { FormationPlayer, Sub } from "@/components/formation-pitch";
+import { buildTeamSubsFromResponse } from "./utils/buildTeamSubsFromResponse";
 
 export default function Home() {
   const [q, setQ] = useState("");
@@ -67,8 +68,21 @@ export default function Home() {
       string,
       { home: string | number | null; away: string | number | null }
     >;
-    lineups?: any[];
-    events: any[];
+    lineups?: {
+      team: string;
+      formation: string;
+      startXI: FormationPlayer[];
+      subs?: FormationPlayer[];
+    }[];
+    events: {
+      type: string;
+      team?: string;
+      player?: string;
+      assist?: string;
+      detail?: string;
+      comments?: string;
+      time?: { elapsed?: number | null };
+    }[];
     penalties?: {
       order: any;
       team: string;
@@ -88,11 +102,10 @@ export default function Home() {
     }
   ) as { data?: MatchDetails; isLoading: boolean };
 
-  const status = (details.data as MatchDetails)?.status ?? null;
-  const apiElapsed = (details.data as MatchDetails)?.elapsed ?? null;
+  const status = details.data?.status ?? null;
+  const apiElapsed = details.data?.elapsed ?? null;
   const matches = Array.isArray(search.data) ? search.data : [];
 
-  // Derived stats logic
   const derivedStats = (() => {
     if (!details.data) return null;
     const { events, stats, home, away } = details.data as any;
@@ -150,22 +163,21 @@ export default function Home() {
 
   // Penalty shootout
   const penaltyEvents = Array.isArray(details.data?.events)
-    ? details.data.events
-        .filter(
+    ? details
+        .data!.events.filter(
           (ev) =>
             ev.comments === "Penalty Shootout" &&
             (ev.detail === "Penalty" || ev.detail === "Missed Penalty")
         )
         .map((ev, idx) => ({
-          team: ev.team,
-          player: ev.player,
+          team: ev.team!,
+          player: ev.player!,
           scored: ev.detail === "Penalty",
           order: idx + 1,
         }))
     : [];
 
   const [cachedPenalties, setCachedPenalties] = useState<PenaltyEvent[]>([]);
-
   useEffect(() => {
     if (
       penaltyEvents.length > 0 &&
@@ -182,34 +194,54 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [penaltyEvents]);
 
-  // Build substitutions
-  const buildSubs = (events: any[], lineups: any[]) => {
-    if (!Array.isArray(events) || !Array.isArray(lineups)) return [];
-    const allPlayers = lineups.flatMap((l) => l.startXI ?? []);
-    return events
-      .filter((ev) => ev.type === "subst" && ev.player && ev.assist)
-      .map((ev) => {
-        const outPlayer = allPlayers.find((p) => p.name === ev.assist);
-        let inPlayer = allPlayers.find((p) => p.name === ev.player);
-        if (!inPlayer) {
-          inPlayer = {
-            id: Math.random(), // fallback
-            name: ev.player,
-            number: null,
-            pos: "",
-          };
-        }
-        return outPlayer ? { outId: outPlayer.id, in: inPlayer } : null;
-      })
-      .filter(Boolean);
-  };
+  function buildTeamSubs(
+    events: MatchDetails["events"] | undefined,
+    lineups: MatchDetails["lineups"] | undefined
+  ): Record<string, Sub[]> {
+    const subsByTeam: Record<string, Sub[]> = {};
+    if (!Array.isArray(events) || !Array.isArray(lineups)) return subsByTeam;
 
-  const subs =
-    details.data && details.data.events && details.data.lineups
-      ? buildSubs(details.data.events, details.data.lineups).filter(
-          (sub): sub is { outId: number; in: FormationPlayer } => sub !== null
+    const playerByTeamAndName = new Map<string, FormationPlayer>();
+    for (const l of lineups) {
+      const all = [...(l.startXI ?? []), ...(l.subs ?? [])];
+      for (const p of all) {
+        playerByTeamAndName.set(`${l.team}__${p.name}`, p);
+      }
+    }
+
+    for (const ev of events) {
+      if (ev.type !== "subst" || !ev.player || !ev.assist || !ev.team) continue;
+
+      const outP = playerByTeamAndName.get(`${ev.team}__${ev.player}`);
+      let inP = playerByTeamAndName.get(`${ev.team}__${ev.assist}`);
+
+      if (!inP) {
+        inP = {
+          id: Math.floor(Math.random() * 1e9),
+          name: ev.assist,
+          number: 0,
+          pos: "",
+        };
+      }
+      if (!outP) continue;
+
+      const minute = ev.time?.elapsed ?? null;
+      const sub: Sub = { outId: outP.id, in: inP, minute };
+
+      if (!subsByTeam[ev.team]) subsByTeam[ev.team] = [];
+      subsByTeam[ev.team].push(sub);
+    }
+
+    return subsByTeam;
+  }
+
+  const subsByTeam =
+    details.data?.events && details.data?.lineups
+      ? buildTeamSubsFromResponse(
+          details.data.events as any,
+          details.data.lineups as any
         )
-      : [];
+      : {};
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -280,7 +312,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* BlurHash fallback image */}
+      {/* BlurHash fallback */}
       <div className="absolute inset-0 w-full h-full">
         <Blurhash
           hash="L33]+fHq4T.TOGnhyFMwL}o$yFVq"
@@ -292,6 +324,7 @@ export default function Home() {
           className="absolute inset-0 w-full h-full object-cover"
         />
       </div>
+
       {/* Background video */}
       <video
         className="absolute inset-0 w-full h-full object-cover"
@@ -395,11 +428,9 @@ export default function Home() {
 
         <div
           className="results-scroll space-y-3 overflow-y-auto pr-1 pb-2"
-          style={{
-            maxHeight: "calc(100vh - 11rem)",
-          }}
+          style={{ maxHeight: "calc(100vh - 11rem)" }}
         >
-          {matches.map((m, i) => (
+          {matches.map((m: any, i: number) => (
             <motion.div
               key={m.id}
               initial={{ opacity: 0, y: 20 }}
@@ -475,7 +506,7 @@ export default function Home() {
                   {details.data.score.away ?? "-"}
                 </div>
 
-                {/* Conditionally show penalty shootout if present */}
+                {/* Conditionally show penalty shootout */}
                 {penaltyEvents.length > 0 && (
                   <PenaltyShootout
                     penalties={cachedPenalties}
@@ -490,11 +521,12 @@ export default function Home() {
                     <StatsGrid stats={derivedStats ?? {}} />
                     <EventsList events={details.data.events as any} />
                   </div>
+
                   {/* Formations */}
                   <div className="space-y-4 order-2 md:order-2 flex flex-col justify-end">
                     <FormationSection
-                      lineups={details.data.lineups || []}
-                      substitutions={subs}
+                      lineups={(details.data.lineups as any) || []}
+                      subsByTeam={subsByTeam}
                     />
                   </div>
                 </div>
@@ -503,6 +535,7 @@ export default function Home() {
           </div>
         )}
       </main>
+
       <Footer />
 
       {/* Fade-in animation keyframes */}

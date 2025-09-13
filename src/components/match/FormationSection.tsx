@@ -1,34 +1,42 @@
 "use client";
-
-import { FormationPitch, FormationPlayer } from "@/components/formation-pitch";
+import React from "react";
+import {
+  FormationPitch,
+  FormationPlayer,
+  Sub,
+  getCurrentXI,
+} from "@/components/formation-pitch";
 
 export interface Lineup {
   team: string;
   formation: string;
-  startXI: {
-    id: number;
-    name: string;
-    number: number;
-    pos: string;
-  }[];
+  startXI: FormationPlayer[];
+  subs?: FormationPlayer[];
 }
 
 export function FormationSection({
   lineups,
-  substitutions,
+  subsByTeam,
 }: {
   lineups: Lineup[];
-  substitutions?: { outId: number; in: FormationPlayer }[];
+  subsByTeam?: Record<string, Sub[]>;
 }) {
-  // Always render two FormationPitch components, fallback if missing
   const hasLineups = Array.isArray(lineups) && lineups.length > 0;
   const away = hasLineups ? lineups[0] : null;
   const home = hasLineups && lineups.length > 1 ? lineups[1] : null;
 
+  const awayTeam = away?.team ?? "";
+  const homeTeam = home?.team ?? "";
+
+  const awayXI = away ? getCurrentXI(away.startXI, subsByTeam?.[awayTeam]) : [];
+  const homeXI = home ? getCurrentXI(home.startXI, subsByTeam?.[homeTeam]) : [];
+
   return (
     <>
-      {/* Mobile: show details */}
-      <details className="block md:hidden text-[11px] max-md:text-[13px]">
+      <details
+        className="block md:hidden text-[11px] max-md:text-[13px]"
+        open={hasLineups}
+      >
         <summary className="cursor-pointer select-none opacity-80 hover:opacity-100">
           Formation / Lineups
         </summary>
@@ -36,45 +44,45 @@ export function FormationSection({
           <FormationPitch
             team={away?.team ?? "Away"}
             formation={away?.formation ?? ""}
-            players={away?.startXI ?? []}
+            players={awayXI}
             side="away"
             fallback={!away}
-            substitutions={substitutions}
+            substitutions={subsByTeam?.[awayTeam]}
           />
           <FormationPitch
             team={home?.team ?? "Home"}
             formation={home?.formation ?? ""}
-            players={home?.startXI ?? []}
+            players={homeXI}
             side="home"
             fallback={!home}
-            substitutions={substitutions}
+            substitutions={subsByTeam?.[homeTeam]}
           />
         </div>
       </details>
+
       {!hasLineups && (
         <div className="text-xs opacity-60 p-4 border rounded text-center">
           Lineups not available.
         </div>
       )}
 
-      {/* Desktop: show always expanded */}
       <div className="hidden md:block text-[11px]">
         <div className="space-y-4">
           <FormationPitch
             team={away?.team ?? "Away"}
             formation={away?.formation ?? ""}
-            players={away?.startXI ?? []}
+            players={awayXI}
             side="away"
             fallback={!away}
-            substitutions={substitutions}
+            substitutions={subsByTeam?.[awayTeam]}
           />
           <FormationPitch
             team={home?.team ?? "Home"}
             formation={home?.formation ?? ""}
-            players={home?.startXI ?? []}
+            players={homeXI}
             side="home"
             fallback={!home}
-            substitutions={substitutions}
+            substitutions={subsByTeam?.[homeTeam]}
           />
         </div>
       </div>
