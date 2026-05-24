@@ -26,4 +26,14 @@ I made a modern football match info app built to practice a modernized full-stac
 
 I wanted to get hands-on experience with some modern libraries and tools using this full-stack setup mainly: tRPC, TanStack, shadcn/ui, Docker, and Cloudflare. They're a fun, efficient addition to my Next.js workflow.
 
+## Deploy
+
+`npm run deploy` uses these environment variables:
+
+- `DEPLOY_SSH_KEY`
+- `DEPLOY_USER`
+- `DEPLOY_HOST`
+- `DEPLOY_PATH`
+- `DEPLOY_PORT` (optional)
+
 ---
