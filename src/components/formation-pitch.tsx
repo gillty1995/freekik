@@ -15,11 +15,12 @@ export interface Sub {
 
 interface PitchProps {
   formation: string;
-  players: (FormationPlayer & { substituted?: boolean })[];
+  players: (FormationPlayer & { substituted?: boolean; redCarded?: boolean })[];
   team: string;
   side: "home" | "away";
   fallback?: boolean;
   substitutions?: Sub[];
+  redCardedIds?: Set<number>;
 }
 
 export function getCurrentXI(
@@ -78,6 +79,7 @@ export const FormationPitch: React.FC<PitchProps> = ({
   side,
   fallback,
   substitutions,
+  redCardedIds,
 }) => {
   const nums = formation
     .split(/[-–]/)
@@ -172,7 +174,11 @@ export const FormationPitch: React.FC<PitchProps> = ({
 
       {/* GK */}
       <PlayerBadge
-        player={{ ...gk, substituted: cameOnIds.has(gk.id) || gk.substituted }}
+        player={{
+          ...gk,
+          substituted: cameOnIds.has(gk.id) || gk.substituted,
+          redCarded: redCardedIds?.has(gk.id),
+        }}
         gk
         style={{
           top: `${gkY}%`,
@@ -204,6 +210,7 @@ export const FormationPitch: React.FC<PitchProps> = ({
                 player={{
                   ...p,
                   substituted: cameOnIds.has(p.id) || p.substituted,
+                  redCarded: redCardedIds?.has(p.id),
                 }}
                 side={side}
                 short={short}
@@ -229,7 +236,7 @@ export const FormationPitch: React.FC<PitchProps> = ({
 };
 
 interface BadgeProps {
-  player: FormationPlayer & { substituted?: boolean };
+  player: FormationPlayer & { substituted?: boolean; redCarded?: boolean };
   gk?: boolean;
   style?: React.CSSProperties;
   side: "home" | "away";
@@ -248,13 +255,15 @@ const PlayerBadge: React.FC<BadgeProps> = ({
     <div
       className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-semibold ring-2 ring-white/40 shadow-md transition
       ${
-        substituted
+        player.redCarded
+          ? "bg-red-600 text-white ring-red-200/70"
+          : substituted
           ? "bg-blue-500 text-white"
           : gk
           ? "bg-amber-400 text-black"
           : "bg-emerald-600/90 group-hover:bg-emerald-500"
       }`}
-      title={player.name}
+      title={player.redCarded ? `${player.name} - red card` : player.name}
     >
       {player.number ?? "?"}
     </div>
