@@ -17,9 +17,11 @@ export interface Lineup {
 export function FormationSection({
   lineups,
   subsByTeam,
+  redCardsByTeam,
 }: {
   lineups: Lineup[];
   subsByTeam?: Record<string, Sub[]>;
+  redCardsByTeam?: Record<string, Set<number>>;
 }) {
   const hasLineups = Array.isArray(lineups) && lineups.length > 0;
   const away = hasLineups ? lineups[0] : null;
@@ -48,6 +50,7 @@ export function FormationSection({
             side="away"
             fallback={!away}
             substitutions={subsByTeam?.[awayTeam]}
+            redCardedIds={redCardsByTeam?.[awayTeam]}
           />
           <FormationPitch
             team={home?.team ?? "Home"}
@@ -56,6 +59,7 @@ export function FormationSection({
             side="home"
             fallback={!home}
             substitutions={subsByTeam?.[homeTeam]}
+            redCardedIds={redCardsByTeam?.[homeTeam]}
           />
         </div>
       </details>
@@ -75,6 +79,7 @@ export function FormationSection({
             side="away"
             fallback={!away}
             substitutions={subsByTeam?.[awayTeam]}
+            redCardedIds={redCardsByTeam?.[awayTeam]}
           />
           <FormationPitch
             team={home?.team ?? "Home"}
@@ -83,6 +88,7 @@ export function FormationSection({
             side="home"
             fallback={!home}
             substitutions={subsByTeam?.[homeTeam]}
+            redCardedIds={redCardsByTeam?.[homeTeam]}
           />
         </div>
       </div>

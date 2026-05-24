@@ -17,6 +17,14 @@ type DetailsLineup = {
   subs?: FormationPlayer[];
 };
 
+function stableFallbackId(value: string) {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash * 31 + value.charCodeAt(i)) | 0;
+  }
+  return -Math.abs(hash || 1);
+}
+
 export function buildTeamSubsFromResponse(
   events: DetailsEvent[] | undefined,
   lineups: DetailsLineup[] | undefined
@@ -46,7 +54,12 @@ export function buildTeamSubsFromResponse(
 
     const inPlayer: FormationPlayer = inP
       ? { id: inP.id, name: inP.name, number: inP.number ?? 0, pos: inP.pos ?? "" }
-      : { id: Math.floor(Math.random() * 1e9), name: ev.assist, number: 0, pos: "" };
+      : {
+          id: stableFallbackId(`${ev.team}:${ev.assist}`),
+          name: ev.assist,
+          number: 0,
+          pos: "",
+        };
 
     const sub: Sub = { outId: outP.id, in: inPlayer, minute: ev.minute ?? undefined };
 

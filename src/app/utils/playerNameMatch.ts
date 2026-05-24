@@ -2,9 +2,16 @@ import { FormationPlayer } from "@/components/formation-pitch";
 
 export function normalizeName(s: string): string {
   return s
+    .replace(/[łŁ]/g, "l")
+    .replace(/[đĐ]/g, "d")
+    .replace(/[øØ]/g, "o")
+    .replace(/[æÆ]/g, "ae")
+    .replace(/[œŒ]/g, "oe")
+    .replace(/[ß]/g, "ss")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\./g, "") 
+    .replace(/[.'’]/g, "")
+    .replace(/[-‐‑‒–—]/g, " ")
     .toLowerCase()
     .trim()
     .replace(/\s+/g, " ");

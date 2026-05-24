@@ -18,8 +18,9 @@ import { MatchHeader } from "@/components/match/MatchHeader";
 import { Blurhash } from "react-blurhash";
 import { Footer } from "@/components/ui/footer";
 import { normalizeSearchQuery } from "@/lib/searchAliases";
-import { FormationPlayer, Sub } from "@/components/formation-pitch";
+import { FormationPlayer } from "@/components/formation-pitch";
 import { buildTeamSubsFromResponse } from "./utils/buildTeamSubsFromResponse";
+import { buildTeamRedCardsFromResponse } from "./utils/buildTeamRedCardsFromResponse";
 
 export default function Home() {
   const [q, setQ] = useState("");
@@ -194,50 +195,16 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [penaltyEvents]);
 
-  function buildTeamSubs(
-    events: MatchDetails["events"] | undefined,
-    lineups: MatchDetails["lineups"] | undefined
-  ): Record<string, Sub[]> {
-    const subsByTeam: Record<string, Sub[]> = {};
-    if (!Array.isArray(events) || !Array.isArray(lineups)) return subsByTeam;
-
-    const playerByTeamAndName = new Map<string, FormationPlayer>();
-    for (const l of lineups) {
-      const all = [...(l.startXI ?? []), ...(l.subs ?? [])];
-      for (const p of all) {
-        playerByTeamAndName.set(`${l.team}__${p.name}`, p);
-      }
-    }
-
-    for (const ev of events) {
-      if (ev.type !== "subst" || !ev.player || !ev.assist || !ev.team) continue;
-
-      const outP = playerByTeamAndName.get(`${ev.team}__${ev.player}`);
-      let inP = playerByTeamAndName.get(`${ev.team}__${ev.assist}`);
-
-      if (!inP) {
-        inP = {
-          id: Math.floor(Math.random() * 1e9),
-          name: ev.assist,
-          number: 0,
-          pos: "",
-        };
-      }
-      if (!outP) continue;
-
-      const minute = ev.time?.elapsed ?? null;
-      const sub: Sub = { outId: outP.id, in: inP, minute };
-
-      if (!subsByTeam[ev.team]) subsByTeam[ev.team] = [];
-      subsByTeam[ev.team].push(sub);
-    }
-
-    return subsByTeam;
-  }
-
   const subsByTeam =
     details.data?.events && details.data?.lineups
       ? buildTeamSubsFromResponse(
+          details.data.events as any,
+          details.data.lineups as any
+        )
+      : {};
+  const redCardsByTeam =
+    details.data?.events && details.data?.lineups
+      ? buildTeamRedCardsFromResponse(
           details.data.events as any,
           details.data.lineups as any
         )
@@ -515,18 +482,23 @@ export default function Home() {
                   />
                 )}
 
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid items-start gap-6 md:grid-cols-2">
                   {/* Stats and Events */}
                   <div className="space-y-6 order-1 md:order-1">
-                    <StatsGrid stats={derivedStats ?? {}} />
+                    <StatsGrid
+                      stats={derivedStats ?? {}}
+                      home={details.data.home}
+                      away={details.data.away}
+                    />
                     <EventsList events={details.data.events as any} />
                   </div>
 
                   {/* Formations */}
-                  <div className="space-y-4 order-2 md:order-2 flex flex-col justify-end">
+                  <div className="space-y-4 order-2 md:order-2 flex flex-col justify-start">
                     <FormationSection
                       lineups={(details.data.lineups as any) || []}
                       subsByTeam={subsByTeam}
+                      redCardsByTeam={redCardsByTeam}
                     />
                   </div>
                 </div>

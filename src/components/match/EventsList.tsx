@@ -9,6 +9,8 @@ import { FormationSection } from "./FormationSection";
 import { StatsGrid } from "@/components/match/StatsGrid";
 import { MatchHeader } from "./MatchHeader";
 import { EventIcon } from "./EventIcon";
+import { buildTeamRedCardsFromResponse } from "@/app/utils/buildTeamRedCardsFromResponse";
+import { buildTeamSubsFromResponse } from "@/app/utils/buildTeamSubsFromResponse";
 
 export interface MatchEvent {
   minute: number | null;
@@ -104,6 +106,20 @@ export default function Home() {
   })();
 
   const matches = Array.isArray(search.data) ? search.data : [];
+  const subsByTeam =
+    details.data?.events && details.data?.lineups
+      ? buildTeamSubsFromResponse(
+          details.data.events as any,
+          details.data.lineups as any
+        )
+      : {};
+  const redCardsByTeam =
+    details.data?.events && details.data?.lineups
+      ? buildTeamRedCardsFromResponse(
+          details.data.events as any,
+          details.data.lineups as any
+        )
+      : {};
 
   return (
     <main className="p-4 space-y-4 max-w-xl mx-auto">
@@ -167,9 +183,17 @@ export default function Home() {
                   {details.data.score.home ?? "-"} :{" "}
                   {details.data.score.away ?? "-"}
                 </div>
-                <div className="grid gap-8 md:grid-cols-2">
-                  <FormationSection lineups={details.data.lineups} />
-                  <StatsGrid stats={details.data.stats as any} />
+                <div className="grid items-start gap-8 md:grid-cols-2">
+                  <FormationSection
+                    lineups={details.data.lineups}
+                    subsByTeam={subsByTeam}
+                    redCardsByTeam={redCardsByTeam}
+                  />
+                  <StatsGrid
+                    stats={details.data.stats as any}
+                    home={details.data.home}
+                    away={details.data.away}
+                  />
                 </div>
                 <EventsList events={details.data.events as any} />
               </div>
