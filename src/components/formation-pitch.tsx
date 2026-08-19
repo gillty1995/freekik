@@ -15,7 +15,7 @@ export interface Sub {
 
 interface PitchProps {
   formation: string;
-  players: (FormationPlayer & { substituted?: boolean; redCarded?: boolean })[];
+  players: (FormationPlayer & { substituted?: boolean })[];
   team: string;
   side: "home" | "away";
   fallback?: boolean;
@@ -173,22 +173,23 @@ export const FormationPitch: React.FC<PitchProps> = ({
       )}
 
       {/* GK */}
-      <PlayerBadge
-        player={{
-          ...gk,
-          substituted: cameOnIds.has(gk.id) || gk.substituted,
-          redCarded: redCardedIds?.has(gk.id),
-        }}
-        gk
-        style={{
-          top: `${gkY}%`,
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          position: "absolute",
-        }}
-        side={side}
-        short={short}
-      />
+      {!redCardedIds?.has(gk.id) && (
+        <PlayerBadge
+          player={{
+            ...gk,
+            substituted: cameOnIds.has(gk.id) || gk.substituted,
+          }}
+          gk
+          style={{
+            top: `${gkY}%`,
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            position: "absolute",
+          }}
+          side={side}
+          short={short}
+        />
+      )}
 
       {/* Outfield rows */}
       {rows.map((row, i) => {
@@ -204,19 +205,20 @@ export const FormationPitch: React.FC<PitchProps> = ({
             }}
             className="flex gap-2"
           >
-            {row.map((p) => (
-              <PlayerBadge
-                key={p.id}
-                player={{
-                  ...p,
-                  substituted: cameOnIds.has(p.id) || p.substituted,
-                  redCarded: redCardedIds?.has(p.id),
-                }}
-                side={side}
-                short={short}
-                substituted={cameOnIds.has(p.id) || p.substituted}
-              />
-            ))}
+            {row.map((p) =>
+              redCardedIds?.has(p.id) ? null : (
+                <PlayerBadge
+                  key={p.id}
+                  player={{
+                    ...p,
+                    substituted: cameOnIds.has(p.id) || p.substituted,
+                  }}
+                  side={side}
+                  short={short}
+                  substituted={cameOnIds.has(p.id) || p.substituted}
+                />
+              )
+            )}
           </div>
         );
       })}
@@ -236,7 +238,7 @@ export const FormationPitch: React.FC<PitchProps> = ({
 };
 
 interface BadgeProps {
-  player: FormationPlayer & { substituted?: boolean; redCarded?: boolean };
+  player: FormationPlayer & { substituted?: boolean };
   gk?: boolean;
   style?: React.CSSProperties;
   side: "home" | "away";
@@ -255,15 +257,13 @@ const PlayerBadge: React.FC<BadgeProps> = ({
     <div
       className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-semibold ring-2 ring-white/40 shadow-md transition
       ${
-        player.redCarded
-          ? "bg-red-600 text-white ring-red-200/70"
-          : substituted
+        substituted
           ? "bg-blue-500 text-white"
           : gk
           ? "bg-amber-400 text-black"
           : "bg-emerald-600/90 group-hover:bg-emerald-500"
       }`}
-      title={player.redCarded ? `${player.name} - red card` : player.name}
+      title={player.name}
     >
       {player.number ?? "?"}
     </div>
