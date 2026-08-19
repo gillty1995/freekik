@@ -35,5 +35,9 @@ I wanted to get hands-on experience with some modern libraries and tools using t
 - `DEPLOY_HOST`
 - `DEPLOY_PATH`
 - `DEPLOY_PORT` (optional)
+- `DEPLOY_PM2_APP` (optional, defaults to `freekik`)
+
+The deploy script syncs the repository, installs the locked dependencies, builds
+the Next.js production bundle on the server, and restarts the PM2 application.
 
 ---
