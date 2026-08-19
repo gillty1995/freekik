@@ -69,6 +69,14 @@ function PossessionDonut({
   const share = splitShare(homePossession, awayPossession);
   const homeArc = share ? (share.home / 100) * DONUT_CIRCUMFERENCE : 0;
   const awayArc = share ? (share.away / 100) * DONUT_CIRCUMFERENCE : 0;
+  const leadingShare =
+    share == null ? null : share.home >= share.away ? share.home : share.away;
+  const leadingShareClass =
+    share == null
+      ? "text-slate-500 dark:text-slate-400"
+      : share.home >= share.away
+        ? "text-[#6ee7a8]"
+        : "text-sky-300";
 
   return (
     <div className="overflow-hidden rounded-md border border-slate-200/70 bg-slate-50 p-3 shadow-sm dark:border-[#6ee7a8]/15 dark:bg-[#101923]/85">
@@ -124,11 +132,8 @@ function PossessionDonut({
             )}
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="font-mono text-lg font-semibold text-[#6ee7a8]">
-              {share ? `${Math.round(share.home)}%` : "-"}
-            </span>
-            <span className="text-[9px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              home
+            <span className={`font-mono text-lg font-semibold ${leadingShareClass}`}>
+              {leadingShare == null ? "-" : `${Math.round(leadingShare)}%`}
             </span>
           </div>
         </div>
